@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الصلوات الفائتة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #2E3440;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #D8DEE9;
+        }
+
+        .container {
+            background: #3B4252;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            margin-top: 50px;
+            border: 1px solid #4C566A;
+        }
+
+        h1 {
+            color: #88C0D0;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+            border-bottom: 2px solid #4C566A;
+            padding-bottom: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #81A1C1;
+            font-weight: 500;
+        }
+
+        input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            background: #434C5E;
+            border: 2px solid #4C566A;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #D8DEE9;
+            transition: all 0.3s ease;
+        }
+
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #5E81AC;
+            box-shadow: 0 0 0 3px rgba(94, 129, 172, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #5E81AC;
+            color: #ECEFF4;
+        }
+
+        .btn-primary:hover {
+            background: #4C6A8C;
+        }
+
+        .btn-secondary {
+            background: #88C0D0;
+            color: #2E3440;
+        }
+
+        .btn-secondary:hover {
+            background: #6DA5B4;
+        }
+
+        .result {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 20px;
+            color: #A3BE8C;
+            font-weight: bold;
+            padding: 15px;
+            background: #2E3440;
+            border-radius: 8px;
+            display: none;
+            border: 1px solid #4C566A;
+        }
+
+        .warning {
+            color: #BF616A;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+            padding: 10px;
+            background: #3B4252;
+            border-radius: 6px;
+            border: 1px solid #BF616A;
+        }
+
+        .note {
+            color: #81A1C1;
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 20px;
+            background: #434C5E;
+            border-radius: 8px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>حساب أيام الصلاة الفائتة</h1>
+        
+        <div class="input-group">
+            <label>اختر تاريخ آخر يوم صليت فيه:</label>
+            <input type="date" id="lastDate">
+        </div>
+
+        <div class="input-group" id="endDateGroup" style="display: none;">
+            <label>اختر التاريخ الذي تريد التوقف عنده:</label>
+            <input type="date" id="endDate">
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="calculateToToday()">الحساب حتى اليوم</button>
+            <button class="btn-secondary" onclick="toggleEndDate()">الحساب حتى تاريخ محدد</button>
+        </div>
+        
+        <div class="result" id="result"></div>
+        <div class="warning" id="warning"></div>
+
+        <div class="note">
+            ﴿وَأَقِمِ الصَّلَاةَ طَرَفَيِ النَّهَارِ وَزُلَفًا مِّنَ اللَّيْلِ﴾ [هود: 114]<br>
+            قال الرسول صلى الله عليه وسلم: "دَينُ اللَّهِ أحقُّ أن يُقضَى"
+        </div>
+    </div>
+
+    <script>
+        let customDateMode = false;
+
+        function toggleEndDate() {
+            const endDateGroup = document.getElementById('endDateGroup');
+            customDateMode = !customDateMode;
+            endDateGroup.style.display = customDateMode ? 'block' : 'none';
+            
+            if(customDateMode) {
+                document.getElementById('warning').style.display = 'none';
+                document.getElementById('result').style.display = 'none';
+            }
+        }
+
+        function validateDates(startDate, endDate) {
+            const warningDiv = document.getElementById('warning');
+            
+            if(startDate > endDate) {
+                warningDiv.innerHTML = '!التاريخ المحدد لا يمكن أن يكون قبل تاريخ البدء';
+                warningDiv.style.display = 'block';
+                return false;
+            }
+            
+            if(endDate > new Date()) {
+                warningDiv.innerHTML = '!التاريخ المحدد لا يمكن أن يكون في المستقبل';
+                warningDiv.style.display = 'block';
+                return false;
+            }
+            
+            warningDiv.style.display = 'none';
+            return true;
+        }
+
+        function calculateDays(endDateInput) {
+            const lastDate = document.getElementById('lastDate').value;
+            const resultDiv = document.getElementById('result');
+            const warningDiv = document.getElementById('warning');
+
+            if (!lastDate) {
+                warningDiv.innerHTML = 'الرجاء اختيار تاريخ البدء أولاً';
+                warningDiv.style.display = 'block';
+                return;
+            }
+
+            const selectedDate = new Date(lastDate);
+            const endDate = endDateInput ? new Date(endDateInput) : new Date();
+            
+            selectedDate.setHours(0, 0, 0, 0);
+            endDate.setHours(0, 0, 0, 0);
+
+            if(!validateDates(selectedDate, endDate)) return;
+
+            const diffTime = endDate - selectedDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            resultDiv.innerHTML = `الأيام الفائتة: ${diffDays.toLocaleString()} يومًا`;
+            resultDiv.style.display = 'block';
+            warningDiv.style.display = 'none';
+        }
+
+        function calculateToToday() {
+            document.getElementById('endDateGroup').style.display = 'none';
+            customDateMode = false;
+            calculateDays();
+        }
+
+        document.getElementById('endDate').addEventListener('change', function() {
+            calculateDays(this.value);
+        });
+    </script>
+</body>
+</html>
